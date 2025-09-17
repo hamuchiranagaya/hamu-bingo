@@ -13,9 +13,11 @@ body{overflow:hidden}
 #rotate-tip{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;text-align:center;padding:24px;pointer-events:auto}
 
 #app{height:100vh;display:grid;grid-template-rows:48px 1fr;gap:8px;padding:8px}
-header{position:relative;z-index:200;background:var(--panel);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
+header{position:relative;z-index:1000;background:var(--panel);border-radius:12px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
 header .title{font-size:clamp(14px,1.8vw,18px);font-weight:700}
-button{appearance:none;border:none;border-radius:10px;padding:8px 12px;color:#fff;background:#30365a;font-size:clamp(12px,1.7vw,16px)}
+header .controls{display:flex;gap:10px}
+button{appearance:none;border:none;border-radius:10px;padding:8px 12px;color:#fff;background:#30365a;font-size:clamp(12px,1.7vw,16px);cursor:pointer;pointer-events:auto}
+button:active{transform:translateY(1px); filter:brightness(.96)}
 .btn-accent{background:linear-gradient(180deg,#2f6bb0,#204b7b)}.btn-pink{background:linear-gradient(180deg,#b05590,#7b2e57)}.btn-gray{background:linear-gradient(180deg,#3a3f5b,#2a2f49)}
 main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 
@@ -38,7 +40,6 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
   animation: metalMove 3s linear infinite, metalPulse 2.4s ease-in-out infinite; }
 @keyframes metalMove{ from{ background-position: 0% 50%; } to{ background-position: 200% 50%; } }
 @keyframes metalPulse{ 0%,100%{ filter: drop-shadow(0 10px 28px rgba(255,255,255,.18)); } 50%{ filter: drop-shadow(0 14px 40px rgba(255,255,255,.32)); } }
-@keyframes popIn{0%{opacity:0;transform:scale(.7)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
 
 /* Ultra-wide phones */
 @media (orientation: landscape) and (min-aspect-ratio: 19/9){
@@ -90,7 +91,19 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .settings.show{display:block}
 .settings label{font-size:14px;color:var(--muted)}
 .settings .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.settings .row button{min-width:64px}
+button.active{outline:2px solid #66b3ff; box-shadow:0 0 0 2px rgba(102,179,255,.25) inset, 0 0 12px rgba(102,179,255,.35)}
 .small{opacity:.8}
+
+/* Name editor modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:3000;pointer-events:auto}
+.modal.show{display:flex}
+.modal .box{background:#151935;border-radius:14px;padding:14px;min-width:min(92vw,720px);max-width:96vw;color:#e5edff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.modal .title{font-weight:700;margin:4px 0 10px 0}
+.modal .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.modal .row{display:flex;gap:8px;align-items:center}
+.modal input[type="text"]{flex:1;background:#0e1230;border:1px solid #2a3157;border-radius:8px;color:#fff;padding:8px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 </style>
 </head>
 <body>
@@ -102,7 +115,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
   <div class="controls">
     <button class="btn-gray" id="fsBtn">全画面</button>
     <button class="btn-gray" id="sfxBtn">効果音: <span id="sfxState">ON</span></button>
-    <button class="btn-gray" id="nameBtn">名前</button>
+    <button class="btn-gray" id="nameBtn" onclick="window.__openNameModal && window.__openNameModal()">名前</button>
     <button class="btn-gray" id="settingsBtn">設定</button>
   </div>
 </header>
@@ -159,7 +172,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 <!-- Name editor modal -->
 <div class="modal" id="nameModal">
   <div class="box">
-    <div class="title">ハムの名前（#01〜#10）</div>
+    <div class="title" style="display:flex;justify-content:space-between;align-items:center;">ハムの名前（#01〜#10）<button id="nameClose" class="btn-gray" style="margin-left:8px">×</button></div>
     <div class="grid" id="nameGrid"></div>
     <div class="actions">
       <button class="btn-gray" id="nameCancel">キャンセル</button>
@@ -203,15 +216,18 @@ function stopRollingSfx(){ if(rollTimer){ clearInterval(rollTimer); rollTimer=nu
 function playRevealSfx(){ const ctx=ensureAudio(); if(!ctx) return; const now=ctx.currentTime; const buffer=ctx.createBuffer(1,44100,44100); const data=buffer.getChannelData(0); for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5; const src=ctx.createBufferSource(); src.buffer=buffer; const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(600, now); const wg=ctx.createGain(); wg.gain.setValueAtTime(0.0001, now); wg.gain.exponentialRampToValueAtTime(0.25*state.volume, now+0.06); wg.gain.exponentialRampToValueAtTime(0.0001, now+0.35); bp.frequency.exponentialRampToValueAtTime(2000, now+0.32); src.connect(bp).connect(wg).connect(ctx.destination); src.start(now); src.stop(now+0.36); const freqs=[523.25,659.25,783.99]; freqs.forEach((f,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(f, now+0.02*i); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime((0.18 - i*0.03)*state.volume, now+0.05+0.02*i); g.gain.exponentialRampToValueAtTime(0.0001, now+0.6+0.05*i); o.connect(g).connect(ctx.destination); o.start(now+0.02*i); o.stop(now+0.7+0.05*i); }); }
 
 /* Names storage */
-const NAMEKEY='ham_names_v6_13';
+const NAMEKEY='ham_names_v6_17';
 function loadNames(){ try{ const raw=localStorage.getItem(NAMEKEY); if(!raw) return Array(10).fill(''); const arr=JSON.parse(raw); if(!Array.isArray(arr)||arr.length!==10) return Array(10).fill(''); return arr.map(x=>x||''); }catch(e){ return Array(10).fill(''); } }
 function saveNames(arr){ try{ localStorage.setItem(NAMEKEY, JSON.stringify(arr)); }catch(e){} }
 let hamNames = loadNames();
 function labelFor(index){ const name=(hamNames[index]||'').trim(); return name?name:`登場ハム：#${String(index+1).padStart(2,'0')}`; }
 
 function openNameModal(){ el.nameGrid.innerHTML=''; for(let i=0;i<10;i++){ const row=document.createElement('div'); row.className='row'; const lab=document.createElement('div'); lab.style.width='62px'; lab.textContent='#'+String(i+1).padStart(2,'0'); const inp=document.createElement('input'); inp.type='text'; inp.value=hamNames[i]||''; inp.placeholder='例）こった'; inp.dataset.idx=i; row.appendChild(lab); row.appendChild(inp); el.nameGrid.appendChild(row);} el.nameModal.classList.add('show'); }
+window.__openNameModal = openNameModal;
 function closeNameModal(){ el.nameModal.classList.remove('show'); }
-$("nameBtn").addEventListener('click', openNameModal);
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && el.nameModal.classList.contains('show')) closeNameModal(); });
+document.getElementById('nameClose').addEventListener('click', closeNameModal);
+document.getElementById('nameModal').addEventListener('click', (e)=>{ if(e.target.id==='nameModal') closeNameModal(); });
 el.nameCancel.addEventListener('click', closeNameModal);
 el.nameSave.addEventListener('click', ()=>{ const inputs=[...el.nameGrid.querySelectorAll('input')]; inputs.forEach(inp=>{ const i=parseInt(inp.dataset.idx); hamNames[i]=inp.value; }); saveNames(hamNames); closeNameModal(); if(el.hamLabel.dataset.index!==''){ el.hamLabel.textContent=labelFor(parseInt(el.hamLabel.dataset.index)); } });
 
@@ -228,7 +244,6 @@ async function drawOnce(){
   if(state.pool.length===0){ alert('すべての番号が出ました！'); return; }
   state.animBusy = true;
 
-  // hide previous number & ham right away; exit start-big
   el.bigNumber.classList.remove('visible','metal','show-number');
   el.hamBox.classList.remove('show');
   el.spinner.classList.remove('start-big');
@@ -252,16 +267,13 @@ async function drawOnce(){
   el.spinner.classList.add('fadeout');
   flash(); shake(); burstShards(); burstSparkles(); playCrackSfx();
 
-  // Number persists
   el.bigNumber.classList.remove('show-number','metal'); el.bigNumber.classList.add('visible'); void el.bigNumber.offsetWidth;
   el.bigNumber.textContent = n; el.bigNumber.classList.add('show-number');
   setTimeout(()=>{ el.bigNumber.classList.add('metal'); }, 100);
 
-  // Matched ham popup + name
   el.hamImg.src = hamImages[kid]; el.hamLabel.dataset.index = String(kid); el.hamLabel.textContent = labelFor(kid);
   el.hamBox.classList.remove('show'); void el.hamBox.offsetWidth; el.hamBox.classList.add('show');
 
-  // Celebration
   rays(); petals(70); playRevealSfx();
 
   markGrid(n,true);
@@ -273,7 +285,7 @@ function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(l
 function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); el.hamBox.classList.remove('show'); el.spinner.classList.remove('spin','jitter','fadeout'); showStart(); save(); }
 
 /* storage */
-const KEY='ham_bingo_state_v6_13';
+const KEY='ham_bingo_state_v6_17';
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume,density:state.density})); }catch(e){} }
 function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; state.density=d.density ?? 'standard'; return true; }catch(e){ return false; } }
 
@@ -282,26 +294,29 @@ function applyDensity(){ let num=1, ham=1; if(state.density==='compact'){ num=0.
 
 el.fsBtn.addEventListener('click', async ()=>{const docEl=document.documentElement;if(!document.fullscreenElement)await docEl.requestFullscreen().catch(()=>{});else await document.exitFullscreen().catch(()=>{})});
 el.sfxBtn.addEventListener('click', ()=>{state.sfx=!state.sfx;el.sfxState.textContent=state.sfx?'ON':'OFF';save()});
-el.settingsBtn.addEventListener('click', ()=>{el.settings.classList.toggle('show')});
-el.settings.querySelectorAll('button[data-size]').forEach(b=>b.addEventListener('click',()=>{state.spinSize=b.getAttribute('data-size');document.documentElement.style.setProperty('--spinSize',state.spinSize);save()}));
-el.settings.querySelectorAll('button[data-rot]').forEach(b=>b.addEventListener('click',()=>{state.rotations=parseInt(b.getAttribute('data-rot')); el.rotVal.textContent=state.rotations; save()}));
-el.settings.querySelectorAll('button[data-vol]').forEach(b=>b.addEventListener('click',()=>{state.volume=parseFloat(b.getAttribute('data-vol')); save()}));
-el.settings.querySelectorAll('button[data-density]').forEach(b=>b.addEventListener('click',()=>{state.density=b.getAttribute('data-density'); applyDensity(); save();}));
+el.settingsBtn.addEventListener('click', ()=>{el.settings.classList.toggle('show'); if(el.settings.classList.contains('show')) reflectActives();});
+el.settings.querySelectorAll('button[data-size]').forEach(b=>b.addEventListener('click',()=>{state.spinSize=b.getAttribute('data-size');document.documentElement.style.setProperty('--spinSize',state.spinSize);save();reflectActives()}));
+el.settings.querySelectorAll('button[data-rot]').forEach(b=>b.addEventListener('click',()=>{state.rotations=parseInt(b.getAttribute('data-rot')); $("rotVal").textContent=state.rotations; save();reflectActives()}));
+el.settings.querySelectorAll('button[data-vol]').forEach(b=>b.addEventListener('click',()=>{state.volume=parseFloat(b.getAttribute('data-vol')); save();reflectActives()}));
+el.settings.querySelectorAll('button[data-density]').forEach(b=>b.addEventListener('click',()=>{state.density=b.getAttribute('data-density'); applyDensity(); save();reflectActives()}));
 
-$("nameBtn").addEventListener('click', openNameModal);
+function reflectActives(){
+  el.settings.querySelectorAll('button[data-size]').forEach(b=>b.classList.toggle('active', b.getAttribute('data-size')===state.spinSize));
+  el.settings.querySelectorAll('button[data-rot]').forEach(b=>b.classList.toggle('active', parseInt(b.getAttribute('data-rot'))===state.rotations));
+  el.settings.querySelectorAll('button[data-density]').forEach(b=>b.classList.toggle('active', b.getAttribute('data-density')===state.density));
+  el.settings.querySelectorAll('button[data-vol]').forEach(b=>b.classList.toggle('active', Math.abs(parseFloat(b.getAttribute('data-vol'))-state.volume)<1e-6));
+}
 
-el.draw.addEventListener('click', drawOnce);
-el.undo.addEventListener('click', undo);
-el.reset.addEventListener('click', reset);
+document.getElementById('nameBtn').addEventListener('click', openNameModal, {once:false});
 
 /* init */
-function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations; applyDensity();}
+function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); $("rotVal").textContent = state.rotations; applyDensity(); reflectActives();}
 init();
+
 // Ensure rotate-tip never blocks clicks when hidden
 const rotateTip=document.getElementById('rotate-tip');
 function updRotate(){ const land=window.matchMedia('(orientation: landscape)').matches; if(land){ rotateTip.style.display='none'; rotateTip.style.pointerEvents='none'; } else { rotateTip.style.display='flex'; rotateTip.style.pointerEvents='auto'; } }
-updRotate();
-window.addEventListener('resize', updRotate);
+updRotate(); window.addEventListener('resize', updRotate);
 
 })();
 </script>

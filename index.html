@@ -23,13 +23,14 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .capsule-area{position:relative;width:100%;height:100%;display:grid;place-items:center}
 .spinner{width:var(--spinSize);height:var(--spinSize);max-width:520px;max-height:520px;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,.35));opacity:1;transition:opacity .4s ease}
 .spin{animation-name:spinTotal; animation-duration: var(--totalDur,2.4s); animation-timing-function: linear; animation-fill-mode: both;}
-.jitter{animation:jitter .35s ease both}
+.jitter{animation:jitterStrong .6s ease both; animation-iteration-count: 2;}
 .fadeout{opacity:0}
 @keyframes spinTotal{from{transform:rotate(0)}to{transform:rotate(calc(var(--rotTurns,2) * 1turn))}}
-@keyframes jitter{0%{transform:rotate(0)}25%{transform:rotate(4deg)}50%{transform:rotate(-3deg)}75%{transform:rotate(2deg)}100%{transform:rotate(0)}}
+@keyframes jitterStrong{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(4px,-3px) rotate(4deg)}20%{transform:translate(-5px,3px) rotate(-4deg)}30%{transform:translate(6px,2px) rotate(5deg)}40%{transform:translate(-6px,-3px) rotate(-5deg)}50%{transform:translate(5px,2px) rotate(4deg)}60%{transform:translate(-4px,-2px) rotate(-4deg)}70%{transform:translate(3px,2px) rotate(3deg)}80%{transform:translate(-3px,-1px) rotate(-3deg)}90%{transform:translate(2px,1px) rotate(2deg)}100%{transform:translate(0,0) rotate(0)}}
 
 .number-reveal{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:20}
-.big-number{font-size:clamp(64px,12vw,160px);font-weight:900;letter-spacing:2px;filter:drop-shadow(0 12px 30px rgba(0,0,0,.45));opacity:0;transform:scale(.7);}
+.big-number{font-size:clamp(140px,40vw,520px);font-weight:900;letter-spacing:4px;filter:drop-shadow(0 18px 46px rgba(0,0,0,.5));opacity:0;transform:scale(.7);}
+.big-number.visible{opacity:1;}
 .show-number{animation:popIn .55s cubic-bezier(.2,.9,.1,1) .05s both}
 .big-number.metal{ color: transparent; background: linear-gradient(90deg,#cfcfcf 0%,#fefefe 20%,#c0c0c0 40%,#fefefe 60%,#cfcfcf 80%); -webkit-background-clip: text; background-clip: text;
   -webkit-text-stroke: 1px rgba(255,255,255,.35);
@@ -46,12 +47,13 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#10142b;color:var(--muted);font-weight:700;font-size:clamp(12px,1.8vw,18px)}
 .cell.hit{background:linear-gradient(180deg,#2a8cff,#1650a6);color:#fff;box-shadow:0 0 14px rgba(66,153,255,.35)}
 
-.hamster{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.3);border-radius:12px;padding:8px;backdrop-filter:blur(2px);transform:translateY(14px);opacity:0}
+/* Ham */
+.hamster{position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:10px;background:rgba(0,0,0,.28);border-radius:16px;padding:12px;backdrop-filter:blur(2px);transform:translateY(14px);opacity:0}
 .hamster.show{animation:hamIn .4s ease .2s both}
 @keyframes hamIn{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
-.hamster .imgbox{ width: clamp(88px, 18vh, 180px); height: clamp(88px, 18vh, 180px); background:#0b0e1e; border-radius: 12px; display:grid; place-items:center; overflow:hidden; }
+.hamster .imgbox{ width: clamp(160px, 32vh, 360px); height: clamp(160px, 32vh, 360px); background:#0b0e1e; border-radius: 16px; display:grid; place-items:center; overflow:hidden; }
 .hamster img{width:100%;height:100%;object-fit:contain}
-.hamster .label{font-size:clamp(12px,1.6vw,14px);color:var(--muted)}
+.hamster .label{font-size:clamp(14px,1.8vw,18px);color:var(--muted)}
 
 /* FX */
 .fx-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:10}
@@ -91,7 +93,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 <section class="stage" id="stage">
   <div class="capsule-area">
     <img id="spinner" class="spinner" src="assets/ketsu_01.png" alt="HamKetsu"/>
-    <div class="number-reveal"><div class="big-number" id="bigNumber">--</div></div>
+    <div class="number-reveal"><div class="big-number visible" id="bigNumber">--</div></div>
     <div class="hamster" id="hamBox">
       <div class="imgbox"><img id="hamImg" src="assets/ham_01.png" alt="Ham"/></div>
       <div class="label" id="hamLabel">登場ハム：#01</div>
@@ -112,7 +114,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 </section>
 </main>
 
-<footer><div class="hint small">差し替え：はむケツ→ assets/ketsu_01.png〜ketsu_10.png（透過PNG）／ ハム→ assets/ham_01.png〜ham_10.png（正方形推奨）</div></footer>
+<footer></footer>
 </div>
 
 <div class="settings" id="settings">
@@ -149,7 +151,6 @@ function initPool(){state.pool=Array.from({length:TOTAL},(_,i)=>i+1)}
 function buildGrid(){el.grid.innerHTML="";for(let i=1;i<=TOTAL;i++){const d=document.createElement("div");d.className="cell";d.textContent=i;d.id=`cell-${i}`;el.grid.appendChild(d)}}
 function markGrid(n,on){const c=document.getElementById(`cell-${n}`);if(c)c.classList.toggle("hit",!!on)}
 function sample(arr){return arr[Math.floor(Math.random()*arr.length)]}
-function randomHamIndex(){let idx;do{idx=Math.floor(Math.random()*hamImages.length)}while(hamImages.length>1&&idx===state.lastHamIndex);state.lastHamIndex=idx;return idx}
 
 function flash(){const d=document.createElement("div");d.className="flash run";el.fx.appendChild(d);setTimeout(()=>d.remove(),520)}
 function shake(){el.stage.classList.add("shake");setTimeout(()=>el.stage.classList.remove("shake"),420)}
@@ -170,10 +171,12 @@ async function drawOnce(){
   if(state.animBusy) return;
   if(state.pool.length===0){ alert('すべての番号が出ました！'); return; }
   state.animBusy = true;
+  // hide previous number right away
+  el.bigNumber.classList.remove('visible','metal','show-number');
 
   const n = sample(state.pool); state.pool = state.pool.filter(x=>x!==n); state.history.push(n);
 
-  const kid = Math.floor(Math.random()*ketsuImages.length);
+  const kid = Math.floor(Math.random()*10); // 0..9
   el.spinner.src = ketsuImages[kid];
   el.spinner.classList.remove('spin','jitter','fadeout');
   el.spinner.style.setProperty('--rotTurns', state.rotations.toString());
@@ -184,17 +187,19 @@ async function drawOnce(){
   el.spinner.classList.add('spin');
   await new Promise(r=>setTimeout(r, Math.round(state.rotations*1200)));
   el.spinner.classList.add('jitter');
-  await new Promise(r=>setTimeout(r, 350));
+  await new Promise(r=>setTimeout(r, 600)); // stronger, longer shake
   stopRollingSfx();
 
   el.spinner.classList.add('fadeout');
   flash(); shake(); burstShards(); burstSparkles(); playCrackSfx();
 
-  el.bigNumber.classList.remove('show-number','metal'); void el.bigNumber.offsetWidth;
+  // Number persists until next draw
+  el.bigNumber.classList.remove('show-number','metal'); el.bigNumber.classList.add('visible'); void el.bigNumber.offsetWidth;
   el.bigNumber.textContent = n; el.bigNumber.classList.add('show-number');
   setTimeout(()=>{ el.bigNumber.classList.add('metal'); }, 100);
 
-  const hidx = randomHamIndex(); el.hamImg.src = hamImages[hidx]; el.hamLabel.textContent = `登場ハム：#${String(hidx+1).padStart(2,'0')}`;
+  // Show matching ham (ketsu_N -> ham_N)
+  const hidx = kid; el.hamImg.src = hamImages[hidx]; el.hamLabel.textContent = `登場ハム：#${String(hidx+1).padStart(2,'0')}`;
   el.hamBox.classList.remove('show'); void el.hamBox.offsetWidth; el.hamBox.classList.add('show');
 
   playRevealSfx();
@@ -203,13 +208,13 @@ async function drawOnce(){
   state.animBusy=false;
 }
 
-function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(last==null) return; state.pool.push(last); markGrid(last,false); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=state.history[state.history.length-1] ?? '--'; save(); }
-function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent='--'; save(); }
+function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(last==null) return; state.pool.push(last); markGrid(last,false); el.bigNumber.classList.remove('metal'); if(state.history.length){el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible');} else {el.bigNumber.textContent='--'; el.bigNumber.classList.remove('visible');} save(); }
+function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent='--'; el.bigNumber.classList.remove('visible'); save(); }
 
 /* storage */
-const KEY='ham_bingo_state_v6_7';
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,lastHamIndex:state.lastHamIndex,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume})); }catch(e){} }
-function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.lastHamIndex=d.lastHamIndex ?? -1; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; return true; }catch(e){ return false; } }
+const KEY='ham_bingo_state_v6_8';
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume})); }catch(e){} }
+function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; return true; }catch(e){ return false; } }
 
 /* UI */
 el.fsBtn.addEventListener('click', async ()=>{const docEl=document.documentElement;if(!document.fullscreenElement)await docEl.requestFullscreen().catch(()=>{});else await document.exitFullscreen().catch(()=>{})});
@@ -224,13 +229,8 @@ el.undo.addEventListener('click', undo);
 el.reset.addEventListener('click', reset);
 
 /* init */
-buildGrid();
-if(!load()) initPool();
-state.history.forEach(n=>markGrid(n,true));
-el.bigNumber.textContent=state.history[state.history.length-1] ?? '--';
-el.sfxState.textContent=state.sfx ? 'ON' : 'OFF';
-document.documentElement.style.setProperty('--spinSize', state.spinSize);
-el.rotVal.textContent = state.rotations;
+function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); el.bigNumber.textContent=state.history[state.history.length-1] ?? '--'; if(state.history.length){el.bigNumber.classList.add('visible');} el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations;}
+init();
 })();
 </script>
 </body>

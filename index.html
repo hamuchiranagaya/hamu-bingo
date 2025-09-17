@@ -10,10 +10,10 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
 body{overflow:hidden}
 *,*::before,*::after{box-sizing:border-box}
 @media (orientation: portrait){#rotate-tip{display:flex}}@media (orientation: landscape){#rotate-tip{display:none}}
-#rotate-tip{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;text-align:center;padding:24px}
+#rotate-tip{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;text-align:center;padding:24px;pointer-events:auto}
 
 #app{height:100vh;display:grid;grid-template-rows:48px 1fr;gap:8px;padding:8px}
-header{background:var(--panel);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
+header{position:relative;z-index:200;background:var(--panel);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
 header .title{font-size:clamp(14px,1.8vw,18px);font-weight:700}
 button{appearance:none;border:none;border-radius:10px;padding:8px 12px;color:#fff;background:#30365a;font-size:clamp(12px,1.7vw,16px)}
 .btn-accent{background:linear-gradient(180deg,#2f6bb0,#204b7b)}.btn-pink{background:linear-gradient(180deg,#b05590,#7b2e57)}.btn-gray{background:linear-gradient(180deg,#3a3f5b,#2a2f49)}
@@ -62,7 +62,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .hamster .label{font-size:clamp(14px,1.8vw,18px);color:var(--muted)}
 
 /* FX */
-.fx-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:10}
+.fx-layer{position:absolute;inset:0;pointer-events:none!important;overflow:visible;z-index:10}
 .flash{position:absolute;left:50%;top:50%;width:0;height:0;transform:translate(-50%,-50%);border-radius:999px;box-shadow:0 0 0 0 rgba(255,255,255,.9)}
 .flash.run{animation:flash .5s ease-out both}
 @keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,255,255,.9)}100%{box-shadow:0 0 120px 160px rgba(255,255,255,0)}}
@@ -86,7 +86,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 100%{transform:translate(calc(var(--sx) + var(--dx)*2),70vh) rotate(360deg) scale(1);opacity:0}}
 
 /* Settings */
-.settings{position:fixed;right:10px;top:56px;z-index:50;background:var(--panel);border-radius:12px;padding:10px;display:none;min-width:260px}
+.settings{position:fixed;right:10px;top:56px;z-index:500;background:var(--panel);border-radius:12px;padding:10px;display:none;min-width:260px;pointer-events:auto}
 .settings.show{display:block}
 .settings label{font-size:14px;color:var(--muted)}
 .settings .row{display:flex;align-items:center;gap:8px;margin:6px 0}
@@ -297,6 +297,12 @@ el.reset.addEventListener('click', reset);
 /* init */
 function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations; applyDensity();}
 init();
+// Ensure rotate-tip never blocks clicks when hidden
+const rotateTip=document.getElementById('rotate-tip');
+function updRotate(){ const land=window.matchMedia('(orientation: landscape)').matches; if(land){ rotateTip.style.display='none'; rotateTip.style.pointerEvents='none'; } else { rotateTip.style.display='flex'; rotateTip.style.pointerEvents='auto'; } }
+updRotate();
+window.addEventListener('resize', updRotate);
+
 })();
 </script>
 </body>

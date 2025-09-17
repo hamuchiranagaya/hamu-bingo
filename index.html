@@ -21,7 +21,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 
 .stage{position:relative;border-radius:14px;background:radial-gradient(120% 140% at 50% 0%,#252d5a 0%,#141a33 60%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);padding:8px;display:grid;place-items:center;overflow:hidden}
 .capsule-area{position:relative;width:100%;height:100%;display:grid;place-items:center}
-.spinner{width:var(--spinSize);height:var(--spinSize);max-width:520px;max-height:520px;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,.35));opacity:1;transition:opacity .4s ease}
+.spinner{width:var(--spinSize);height:var(--spinSize);max-width:520px;max-height:520px;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,.35));opacity:1;transition:opacity .4s ease}.start-big{width:min(82vh,82vw);height:min(82vh,82vw);max-width:none;max-height:none;}
 .spin{animation-name:spinTotal; animation-duration: var(--totalDur,2.4s); animation-timing-function: linear; animation-fill-mode: both;}
 .jitter{animation:jitterStrong .6s ease both; animation-iteration-count: 2;}
 .fadeout{opacity:0}
@@ -141,6 +141,7 @@ const TOTAL=75;
 const hamImages=Array.from({length:10},(_,i)=>`assets/ham_${String(i+1).padStart(2,'0')}.png`);
 const ketsuImages=Array.from({length:10},(_,i)=>`assets/ketsu_${String(i+1).padStart(2,'0')}.png`);
 const state={pool:[],history:[],lastHamIndex:-1,animBusy:false,sfx:true,spinSize:"min(64vh,64vw)",rotations:2,volume:0.8};
+function showStart(){ el.spinner.src='assets/start.png'; el.spinner.classList.add('start-big'); el.bigNumber.classList.remove('visible','metal','show-number'); el.bigNumber.textContent=''; el.hamBox.classList.remove('show'); }
 const $=id=>document.getElementById(id);
 const el={grid:$("historyGrid"),draw:$("drawBtn"),undo:$("undoBtn"),reset:$("resetBtn"),
 bigNumber:$("bigNumber"),hamImg:$("hamImg"),hamLabel:$("hamLabel"),hamBox:$("hamBox"),
@@ -171,8 +172,10 @@ async function drawOnce(){
   if(state.animBusy) return;
   if(state.pool.length===0){ alert('すべての番号が出ました！'); return; }
   state.animBusy = true;
-  // hide previous number right away
+  // hide previous number & ham right away
   el.bigNumber.classList.remove('visible','metal','show-number');
+  el.hamBox.classList.remove('show');
+  el.spinner.classList.remove('start-big');
 
   const n = sample(state.pool); state.pool = state.pool.filter(x=>x!==n); state.history.push(n);
 
@@ -209,7 +212,7 @@ async function drawOnce(){
 }
 
 function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(last==null) return; state.pool.push(last); markGrid(last,false); el.bigNumber.classList.remove('metal'); if(state.history.length){el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible');} else {el.bigNumber.textContent='--'; el.bigNumber.classList.remove('visible');} save(); }
-function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent='--'; el.bigNumber.classList.remove('visible'); save(); }
+function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); showStart(); save(); }
 
 /* storage */
 const KEY='ham_bingo_state_v6_8';
@@ -229,7 +232,7 @@ el.undo.addEventListener('click', undo);
 el.reset.addEventListener('click', reset);
 
 /* init */
-function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); el.bigNumber.textContent=state.history[state.history.length-1] ?? '--'; if(state.history.length){el.bigNumber.classList.add('visible');} el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations;}
+function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations;}
 init();
 })();
 </script>

@@ -136,9 +136,9 @@ button.active{outline:2px solid #66b3ff; box-shadow:0 0 0 2px rgba(102,179,255,.
   <div class="head">
     <div class="range-info">番号範囲：1〜75（重複なし）</div>
     <div class="actions">
-      <button class="btn-accent" id="drawBtn">抽選</button>
-      <button class="btn-gray" id="undoBtn">1手戻す</button>
-      <button class="btn-pink" id="resetBtn">リセット</button>
+      <button class="btn-accent" id="drawBtn" onclick="window.__drawOnce && window.__drawOnce()">抽選</button>
+      <button class="btn-gray" id="undoBtn" onclick="window.__undoOnce && window.__undoOnce()">1手戻す</button>
+      <button class="btn-pink" id="resetBtn" onclick="window.__resetAll && window.__resetAll()">リセット</button>
     </div>
   </div>
   <div id="historyGrid" class="grid"></div>
@@ -239,7 +239,7 @@ function petals(count=60){ for(let i=0;i<count;i++){ const p=document.createElem
 function showStart(){ el.spinner.src='assets/start.png'; el.spinner.classList.add('start-big'); el.bigNumber.classList.remove('visible','metal','show-number'); el.bigNumber.textContent=''; el.hamBox.classList.remove('show'); }
 
 /* Flow */
-async function drawOnce(){
+async function drawOnce(){ try {
   if(state.animBusy) return;
   if(state.pool.length===0){ alert('すべての番号が出ました！'); return; }
   state.animBusy = true;
@@ -279,7 +279,7 @@ async function drawOnce(){
   markGrid(n,true);
   save();
   state.animBusy=false;
-}
+} catch(e){ console && console.error && console.error(e); state.animBusy=false; } }
 
 function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(last==null) return; state.pool.push(last); markGrid(last,false); el.bigNumber.classList.remove('metal'); if(state.history.length){el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible');} else {el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); showStart(); } save(); }
 function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); el.hamBox.classList.remove('show'); el.spinner.classList.remove('spin','jitter','fadeout'); showStart(); save(); }
@@ -308,6 +308,9 @@ function reflectActives(){
 }
 
 document.getElementById('nameBtn').addEventListener('click', openNameModal, {once:false});
+window.__drawOnce = ()=>drawOnce();
+window.__undoOnce = ()=>undo();
+window.__resetAll = ()=>reset();
 
 /* init */
 function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); $("rotVal").textContent = state.rotations; applyDensity(); reflectActives();}

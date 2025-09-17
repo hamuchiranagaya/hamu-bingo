@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>はむチラ・ビンゴ</title>
 <style>
-:root{--bg:#0f1220;--panel:#181c2f;--text:#fff;--muted:#9fb0c7;--spinSize:min(64vh,64vw)}
+:root{--bg:#0f1220;--panel:#181c2f;--text:#fff;--muted:#9fb0c7;--spinSize:min(64vh,64vw);--numScale:1;--hamScale:1}
 html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,"Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif}
 body{overflow:hidden}
 *,*::before,*::after{box-sizing:border-box}
@@ -30,7 +30,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 @keyframes jitterStrong{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(4px,-3px) rotate(4deg)}20%{transform:translate(-5px,3px) rotate(-4deg)}30%{transform:translate(6px,2px) rotate(5deg)}40%{transform:translate(-6px,-3px) rotate(-5deg)}50%{transform:translate(5px,2px) rotate(4deg)}60%{transform:translate(-4px,-2px) rotate(-4deg)}70%{transform:translate(3px,2px) rotate(3deg)}80%{transform:translate(-3px,-1px) rotate(-3deg)}90%{transform:translate(2px,1px) rotate(2deg)}100%{transform:translate(0,0) rotate(0)}}
 
 .number-reveal{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:20}
-.big-number{font-size:clamp(140px,40vw,520px);font-weight:900;letter-spacing:4px;filter:drop-shadow(0 18px 46px rgba(0,0,0,.5));opacity:0;transform:scale(.7);}
+.big-number{font-size:clamp(120px, calc(28vmin * var(--numScale)), 520px);line-height:1;font-weight:900;letter-spacing:4px;filter:drop-shadow(0 18px 46px rgba(0,0,0,.5));opacity:0;transform:scale(.7);}
 .big-number.visible{opacity:1;}
 .show-number{animation:popIn .55s cubic-bezier(.2,.9,.1,1) .05s both}
 .big-number.metal{ color: transparent; background: linear-gradient(90deg,#cfcfcf 0%,#fefefe 20%,#c0c0c0 40%,#fefefe 60%,#cfcfcf 80%); -webkit-background-clip: text; background-clip: text;
@@ -39,6 +39,11 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 @keyframes metalMove{ from{ background-position: 0% 50%; } to{ background-position: 200% 50%; } }
 @keyframes metalPulse{ 0%,100%{ filter: drop-shadow(0 10px 28px rgba(255,255,255,.18)); } 50%{ filter: drop-shadow(0 14px 40px rgba(255,255,255,.32)); } }
 @keyframes popIn{0%{opacity:0;transform:scale(.7)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+
+/* Ultra-wide phones */
+@media (orientation: landscape) and (min-aspect-ratio: 19/9){
+  .big-number{font-size:clamp(110px, calc(22vmin * var(--numScale)), 440px);}
+}
 
 .panel{display:grid;grid-template-rows:auto 1fr;gap:8px;min-height:0}
 .head{background:var(--panel);border-radius:12px;padding:8px;display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -49,10 +54,10 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .cell.hit{background:linear-gradient(180deg,#2a8cff,#1650a6);color:#fff;box-shadow:0 0 14px rgba(66,153,255,.35)}
 
 /* Ham popup */
-.hamster{position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:10px;background:rgba(0,0,0,.28);border-radius:16px;padding:12px;backdrop-filter:blur(2px);transform:translateY(14px);opacity:0}
+.hamster{position:absolute;right:max(14px,4vmin);bottom:max(14px,3.5vmin);display:flex;flex-direction:column;align-items:center;gap:10px;background:rgba(0,0,0,.28);border-radius:16px;padding:12px;backdrop-filter:blur(2px);transform:translateY(14px);opacity:0}
 .hamster.show{animation:hamIn .4s ease .2s both}
 @keyframes hamIn{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
-.hamster .imgbox{ width: clamp(160px, 32vh, 360px); height: clamp(160px, 32vh, 360px); background:#0b0e1e; border-radius: 16px; display:grid; place-items:center; overflow:hidden; }
+.hamster .imgbox{ width: clamp(140px, calc(26vmin * var(--hamScale)), 360px); height: clamp(140px, calc(26vmin * var(--hamScale)), 360px); background:#0b0e1e; border-radius: 16px; display:grid; place-items:center; overflow:hidden; }
 .hamster img{width:100%;height:100%;object-fit:contain}
 .hamster .label{font-size:clamp(14px,1.8vw,18px);color:var(--muted)}
 
@@ -69,23 +74,6 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .fly{animation:fly var(--dur) cubic-bezier(.2,.9,.1,1) forwards;transform-origin:center}
 @keyframes fly{0%{transform:translate(-50%,-50%) rotate(0) scale(.6);opacity:1}80%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot)) scale(1);opacity:0}}
 
-/* Settings */
-.settings{position:fixed;right:10px;top:56px;z-index:50;background:var(--panel);border-radius:12px;padding:10px;display:none;min-width:260px}
-.settings.show{display:block}
-.settings label{font-size:14px;color:var(--muted)}
-.settings .row{display:flex;align-items:center;gap:8px;margin:6px 0}
-.small{opacity:.8}
-
-/* Name editor modal */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:70}
-.modal.show{display:flex}
-.modal .box{background:#151935;border-radius:14px;padding:14px;min-width:min(92vw,720px);max-width:96vw;color:#e5edff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
-.modal .title{font-weight:700;margin:4px 0 10px 0}
-.modal .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.modal .row{display:flex;gap:8px;align-items:center}
-.modal input[type="text"]{flex:1;background:#0e1230;border:1px solid #2a3157;border-radius:8px;color:#fff;padding:8px}
-.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-
 /* Celebration FX */
 .rays{position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;transform:translate(-50%,-50%) scale(.6);background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.28) 0 3deg, transparent 3deg 14deg);filter:blur(0.5px) drop-shadow(0 0 18px rgba(255,255,255,.25));opacity:0;pointer-events:none;z-index:9;border-radius:50%}
 .rays.run{animation:raysBurst .6s ease-out both}
@@ -97,6 +85,12 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 50%{transform:translate(calc(var(--sx) + var(--dx)),20vh) rotate(180deg) scale(1)}
 100%{transform:translate(calc(var(--sx) + var(--dx)*2),70vh) rotate(360deg) scale(1);opacity:0}}
 
+/* Settings */
+.settings{position:fixed;right:10px;top:56px;z-index:50;background:var(--panel);border-radius:12px;padding:10px;display:none;min-width:260px}
+.settings.show{display:block}
+.settings label{font-size:14px;color:var(--muted)}
+.settings .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.small{opacity:.8}
 </style>
 </head>
 <body>
@@ -120,7 +114,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
     <div class="number-reveal"><div class="big-number" id="bigNumber"></div></div>
     <div class="hamster" id="hamBox">
       <div class="imgbox"><img id="hamImg" src="assets/ham_01.png" alt="Ham"/></div>
-      <div class="label" id="hamLabel">登場ハム：#01</div>
+      <div class="label" id="hamLabel" data-index="">登場ハム：#01</div>
     </div>
     <div class="fx-layer" id="fx"></div>
   </div>
@@ -150,6 +144,11 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
     <button class="btn-gray" data-rot="3">3回転</button>
     <span class="small" id="rotHint">(現在: <b id="rotVal">2</b>)</span>
   </div>
+  <div class="row"><label>レイアウト密度：</label>
+    <button class="btn-gray" data-density="compact">コンパクト</button>
+    <button class="btn-gray" data-density="standard">標準</button>
+    <button class="btn-gray" data-density="large">大きめ</button>
+  </div>
   <div class="row"><label>音量：</label>
     <button class="btn-gray" data-vol="0.5">小</button>
     <button class="btn-gray" data-vol="0.8">中</button>
@@ -174,12 +173,15 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 const TOTAL=75;
 const hamImages=Array.from({length:10},(_,i)=>`assets/ham_${String(i+1).padStart(2,'0')}.png`);
 const ketsuImages=Array.from({length:10},(_,i)=>`assets/ketsu_${String(i+1).padStart(2,'0')}.png`);
-const state={pool:[],history:[],animBusy:false,sfx:true,spinSize:"min(64vh,64vw)",rotations:2,volume:0.8};
+const state={pool:[],history:[],animBusy:false,sfx:true,spinSize:"min(64vh,64vw)",rotations:2,volume:0.8,density:'standard'};
 const $=id=>document.getElementById(id);
 const el={grid:$("historyGrid"),draw:$("drawBtn"),undo:$("undoBtn"),reset:$("resetBtn"),
 bigNumber:$("bigNumber"),hamImg:$("hamImg"),hamLabel:$("hamLabel"),hamBox:$("hamBox"),
 stage:$("stage"),fx:$("fx"),spinner:$("spinner"),
-fsBtn:$("fsBtn"),sfxBtn:$("sfxBtn"),sfxState:$("sfxState"),settingsBtn:$("settingsBtn"),settings:$("settings"),rotVal:$("rotVal")};
+fsBtn:$("fsBtn"),sfxBtn:$("sfxBtn"),sfxState:$("sfxState"),nameBtn:$("nameBtn"),
+settingsBtn:$("settingsBtn"),settings:$("settings"),rotVal:$("rotVal"),
+nameModal:document.getElementById('nameModal'),nameGrid:document.getElementById('nameGrid'),
+nameCancel:document.getElementById('nameCancel'),nameSave:document.getElementById('nameSave')};
 
 function initPool(){state.pool=Array.from({length:TOTAL},(_,i)=>i+1)}
 function buildGrid(){el.grid.innerHTML="";for(let i=1;i<=TOTAL;i++){const d=document.createElement("div");d.className="cell";d.textContent=i;d.id=`cell-${i}`;el.grid.appendChild(d)}}
@@ -199,6 +201,24 @@ function playRollingTick(){ const ctx=ensureAudio(); if(!ctx) return; const now=
 function startRollingSfx(){ if(!state.sfx) return; stopRollingSfx(); rollTimer=setInterval(playRollingTick, 100); }
 function stopRollingSfx(){ if(rollTimer){ clearInterval(rollTimer); rollTimer=null; } }
 function playRevealSfx(){ const ctx=ensureAudio(); if(!ctx) return; const now=ctx.currentTime; const buffer=ctx.createBuffer(1,44100,44100); const data=buffer.getChannelData(0); for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5; const src=ctx.createBufferSource(); src.buffer=buffer; const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(600, now); const wg=ctx.createGain(); wg.gain.setValueAtTime(0.0001, now); wg.gain.exponentialRampToValueAtTime(0.25*state.volume, now+0.06); wg.gain.exponentialRampToValueAtTime(0.0001, now+0.35); bp.frequency.exponentialRampToValueAtTime(2000, now+0.32); src.connect(bp).connect(wg).connect(ctx.destination); src.start(now); src.stop(now+0.36); const freqs=[523.25,659.25,783.99]; freqs.forEach((f,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(f, now+0.02*i); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime((0.18 - i*0.03)*state.volume, now+0.05+0.02*i); g.gain.exponentialRampToValueAtTime(0.0001, now+0.6+0.05*i); o.connect(g).connect(ctx.destination); o.start(now+0.02*i); o.stop(now+0.7+0.05*i); }); }
+
+/* Names storage */
+const NAMEKEY='ham_names_v6_13';
+function loadNames(){ try{ const raw=localStorage.getItem(NAMEKEY); if(!raw) return Array(10).fill(''); const arr=JSON.parse(raw); if(!Array.isArray(arr)||arr.length!==10) return Array(10).fill(''); return arr.map(x=>x||''); }catch(e){ return Array(10).fill(''); } }
+function saveNames(arr){ try{ localStorage.setItem(NAMEKEY, JSON.stringify(arr)); }catch(e){} }
+let hamNames = loadNames();
+function labelFor(index){ const name=(hamNames[index]||'').trim(); return name?name:`登場ハム：#${String(index+1).padStart(2,'0')}`; }
+
+function openNameModal(){ el.nameGrid.innerHTML=''; for(let i=0;i<10;i++){ const row=document.createElement('div'); row.className='row'; const lab=document.createElement('div'); lab.style.width='62px'; lab.textContent='#'+String(i+1).padStart(2,'0'); const inp=document.createElement('input'); inp.type='text'; inp.value=hamNames[i]||''; inp.placeholder='例）こった'; inp.dataset.idx=i; row.appendChild(lab); row.appendChild(inp); el.nameGrid.appendChild(row);} el.nameModal.classList.add('show'); }
+function closeNameModal(){ el.nameModal.classList.remove('show'); }
+$("nameBtn").addEventListener('click', openNameModal);
+el.nameCancel.addEventListener('click', closeNameModal);
+el.nameSave.addEventListener('click', ()=>{ const inputs=[...el.nameGrid.querySelectorAll('input')]; inputs.forEach(inp=>{ const i=parseInt(inp.dataset.idx); hamNames[i]=inp.value; }); saveNames(hamNames); closeNameModal(); if(el.hamLabel.dataset.index!==''){ el.hamLabel.textContent=labelFor(parseInt(el.hamLabel.dataset.index)); } });
+
+/* Celebration FX */
+function rays(){ const r=document.createElement('div'); r.className='rays run'; el.fx.appendChild(r); setTimeout(()=>r.remove(), 700); }
+const petalColors=['#ffd7e5','#ffe9a6','#d6fff0','#ffe6f2','#e1ffd7','#fff8cc'];
+function petals(count=60){ for(let i=0;i<count;i++){ const p=document.createElement('div'); p.className='petal'; const col=petalColors[Math.floor(Math.random()*petalColors.length)]; p.style.background=col; p.style.left='50%'; p.style.top='0'; const sx=(Math.random()*120-60)+'vw'; const dx=(Math.random()*20-10)+'vw'; p.style.setProperty('--sx',sx); p.style.setProperty('--dx',dx); p.style.animation=`petalFall ${0.9 + Math.random()*0.8}s ease-out ${Math.random()*0.2}s both`; el.fx.appendChild(p); setTimeout(()=>p.remove(),1800);} }
 
 function showStart(){ el.spinner.src='assets/start.png'; el.spinner.classList.add('start-big'); el.bigNumber.classList.remove('visible','metal','show-number'); el.bigNumber.textContent=''; el.hamBox.classList.remove('show'); }
 
@@ -237,11 +257,13 @@ async function drawOnce(){
   el.bigNumber.textContent = n; el.bigNumber.classList.add('show-number');
   setTimeout(()=>{ el.bigNumber.classList.add('metal'); }, 100);
 
-  // Matched ham popup
-  el.hamImg.src = hamImages[kid]; el.hamLabel.dataset.index = kid; el.hamLabel.textContent = labelFor(kid);
+  // Matched ham popup + name
+  el.hamImg.src = hamImages[kid]; el.hamLabel.dataset.index = String(kid); el.hamLabel.textContent = labelFor(kid);
   el.hamBox.classList.remove('show'); void el.hamBox.offsetWidth; el.hamBox.classList.add('show');
 
-  playRevealSfx(); rays(); petals(70);
+  // Celebration
+  rays(); petals(70); playRevealSfx();
+
   markGrid(n,true);
   save();
   state.animBusy=false;
@@ -251,82 +273,29 @@ function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(l
 function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); el.hamBox.classList.remove('show'); el.spinner.classList.remove('spin','jitter','fadeout'); showStart(); save(); }
 
 /* storage */
-const KEY='ham_bingo_state_v6_11';
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume})); }catch(e){} }
-function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; return true; }catch(e){ return false; } }
-
-
-/* Names storage */
-const NKEY='ham_names_v6_12';
-function loadNames(){
-  try{ const raw=localStorage.getItem(NKEY); if(!raw) return Array(10).fill(''); const arr=JSON.parse(raw); if(!Array.isArray(arr)||arr.length!==10) return Array(10).fill(''); return arr.map(x=>x||''); }catch(e){ return Array(10).fill(''); }
-}
-function saveNames(arr){ try{ localStorage.setItem(NKEY, JSON.stringify(arr)); }catch(e){} }
-let hamNames = loadNames();
-
-function labelFor(index){ // index: 0..9
-  const name = (hamNames[index]||'').trim();
-  if(name) return name;
-  return `登場ハム：#${String(index+1).padStart(2,'0')}`;
-}
-
-/* Name modal UI */
-const nameModal = document.getElementById('nameModal');
-const nameGrid = document.getElementById('nameGrid');
-function openNameModal(){
-  nameGrid.innerHTML='';
-  for(let i=0;i<10;i++){
-    const row=document.createElement('div'); row.className='row';
-    const lab=document.createElement('div'); lab.style.width='62px'; lab.textContent='#'+String(i+1).padStart(2,'0');
-    const inp=document.createElement('input'); inp.type='text'; inp.value=hamNames[i]||''; inp.placeholder=`例）こった`; inp.dataset.idx=i;
-    row.appendChild(lab); row.appendChild(inp); nameGrid.appendChild(row);
-  }
-  nameModal.classList.add('show');
-}
-function closeNameModal(){ nameModal.classList.remove('show'); }
-document.getElementById('nameBtn').addEventListener('click', openNameModal);
-document.getElementById('nameCancel').addEventListener('click', closeNameModal);
-document.getElementById('nameSave').addEventListener('click', ()=>{
-  const inputs=[...nameGrid.querySelectorAll('input')];
-  inputs.forEach(inp=>{ const i=parseInt(inp.dataset.idx); hamNames[i]=inp.value; });
-  saveNames(hamNames); closeNameModal();
-  // refresh current label if visible
-  const txt = el.hamLabel.dataset.index ? labelFor(parseInt(el.hamLabel.dataset.index)) : '';
-  if(txt) el.hamLabel.textContent = txt;
-});
-
-/* Celebration FX */
-function rays(){ const r=document.createElement('div'); r.className='rays run'; el.fx.appendChild(r); setTimeout(()=>r.remove(), 700); }
-const petalColors=['#ffd7e5','#ffe9a6','#d6fff0','#ffe6f2','#e1ffd7','#fff8cc'];
-function petals(count=60){
-  for(let i=0;i<count;i++){
-    const p=document.createElement('div'); p.className='petal';
-    const col = petalColors[Math.floor(Math.random()*petalColors.length)];
-    p.style.background=col;
-    p.style.left='50%'; p.style.top='0';
-    const sx = (Math.random()*120-60)+'vw'; // start x offset from center
-    const dx = (Math.random()*20-10)+'vw'; // drift per half fall
-    p.style.setProperty('--sx', sx); p.style.setProperty('--dx', dx);
-    p.style.animation=`petalFall ${0.9 + Math.random()*0.8}s ease-out ${Math.random()*0.2}s both`;
-    el.fx.appendChild(p);
-    setTimeout(()=>p.remove(), 1800);
-  }
-}
+const KEY='ham_bingo_state_v6_13';
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume,density:state.density})); }catch(e){} }
+function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; state.density=d.density ?? 'standard'; return true; }catch(e){ return false; } }
 
 /* UI */
+function applyDensity(){ let num=1, ham=1; if(state.density==='compact'){ num=0.9; ham=0.85; } if(state.density==='standard'){ num=1; ham=1; } if(state.density==='large'){ num=1.1; ham=1.15; } document.documentElement.style.setProperty('--numScale', String(num)); document.documentElement.style.setProperty('--hamScale', String(ham)); }
+
 el.fsBtn.addEventListener('click', async ()=>{const docEl=document.documentElement;if(!document.fullscreenElement)await docEl.requestFullscreen().catch(()=>{});else await document.exitFullscreen().catch(()=>{})});
 el.sfxBtn.addEventListener('click', ()=>{state.sfx=!state.sfx;el.sfxState.textContent=state.sfx?'ON':'OFF';save()});
 el.settingsBtn.addEventListener('click', ()=>{el.settings.classList.toggle('show')});
 el.settings.querySelectorAll('button[data-size]').forEach(b=>b.addEventListener('click',()=>{state.spinSize=b.getAttribute('data-size');document.documentElement.style.setProperty('--spinSize',state.spinSize);save()}));
 el.settings.querySelectorAll('button[data-rot]').forEach(b=>b.addEventListener('click',()=>{state.rotations=parseInt(b.getAttribute('data-rot')); el.rotVal.textContent=state.rotations; save()}));
 el.settings.querySelectorAll('button[data-vol]').forEach(b=>b.addEventListener('click',()=>{state.volume=parseFloat(b.getAttribute('data-vol')); save()}));
+el.settings.querySelectorAll('button[data-density]').forEach(b=>b.addEventListener('click',()=>{state.density=b.getAttribute('data-density'); applyDensity(); save();}));
+
+$("nameBtn").addEventListener('click', openNameModal);
 
 el.draw.addEventListener('click', drawOnce);
 el.undo.addEventListener('click', undo);
 el.reset.addEventListener('click', reset);
 
 /* init */
-function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations;}
+function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations; applyDensity();}
 init();
 })();
 </script>

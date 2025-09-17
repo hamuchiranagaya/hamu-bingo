@@ -75,6 +75,28 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .settings label{font-size:14px;color:var(--muted)}
 .settings .row{display:flex;align-items:center;gap:8px;margin:6px 0}
 .small{opacity:.8}
+
+/* Name editor modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:70}
+.modal.show{display:flex}
+.modal .box{background:#151935;border-radius:14px;padding:14px;min-width:min(92vw,720px);max-width:96vw;color:#e5edff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.modal .title{font-weight:700;margin:4px 0 10px 0}
+.modal .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.modal .row{display:flex;gap:8px;align-items:center}
+.modal input[type="text"]{flex:1;background:#0e1230;border:1px solid #2a3157;border-radius:8px;color:#fff;padding:8px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
+/* Celebration FX */
+.rays{position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;transform:translate(-50%,-50%) scale(.6);background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.28) 0 3deg, transparent 3deg 14deg);filter:blur(0.5px) drop-shadow(0 0 18px rgba(255,255,255,.25));opacity:0;pointer-events:none;z-index:9;border-radius:50%}
+.rays.run{animation:raysBurst .6s ease-out both}
+@keyframes raysBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(0)}70%{opacity:.9}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15) rotate(8deg)}}
+
+.petal{position:absolute;width:12px;height:18px;border-radius:12px 12px 2px 12px;opacity:0;pointer-events:none;z-index:11;mix-blend-mode:screen}
+@keyframes petalFall{0%{transform:translate(var(--sx),-60vh) rotate(0deg) scale(.9);opacity:0}
+10%{opacity:.9}
+50%{transform:translate(calc(var(--sx) + var(--dx)),20vh) rotate(180deg) scale(1)}
+100%{transform:translate(calc(var(--sx) + var(--dx)*2),70vh) rotate(360deg) scale(1);opacity:0}}
+
 </style>
 </head>
 <body>
@@ -86,6 +108,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
   <div class="controls">
     <button class="btn-gray" id="fsBtn">全画面</button>
     <button class="btn-gray" id="sfxBtn">効果音: <span id="sfxState">ON</span></button>
+    <button class="btn-gray" id="nameBtn">名前</button>
     <button class="btn-gray" id="settingsBtn">設定</button>
   </div>
 </header>
@@ -131,6 +154,18 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
     <button class="btn-gray" data-vol="0.5">小</button>
     <button class="btn-gray" data-vol="0.8">中</button>
     <button class="btn-gray" data-vol="1.0">大</button>
+  </div>
+</div>
+
+<!-- Name editor modal -->
+<div class="modal" id="nameModal">
+  <div class="box">
+    <div class="title">ハムの名前（#01〜#10）</div>
+    <div class="grid" id="nameGrid"></div>
+    <div class="actions">
+      <button class="btn-gray" id="nameCancel">キャンセル</button>
+      <button class="btn-accent" id="nameSave">保存</button>
+    </div>
   </div>
 </div>
 
@@ -203,10 +238,10 @@ async function drawOnce(){
   setTimeout(()=>{ el.bigNumber.classList.add('metal'); }, 100);
 
   // Matched ham popup
-  el.hamImg.src = hamImages[kid]; el.hamLabel.textContent = `登場ハム：#${String(kid+1).padStart(2,'0')}`;
+  el.hamImg.src = hamImages[kid]; el.hamLabel.dataset.index = kid; el.hamLabel.textContent = labelFor(kid);
   el.hamBox.classList.remove('show'); void el.hamBox.offsetWidth; el.hamBox.classList.add('show');
 
-  playRevealSfx();
+  playRevealSfx(); rays(); petals(70);
   markGrid(n,true);
   save();
   state.animBusy=false;
@@ -219,6 +254,64 @@ function reset(){ if(state.animBusy) return; if(!confirm('すべてリセット�
 const KEY='ham_bingo_state_v6_11';
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume})); }catch(e){} }
 function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; return true; }catch(e){ return false; } }
+
+
+/* Names storage */
+const NKEY='ham_names_v6_12';
+function loadNames(){
+  try{ const raw=localStorage.getItem(NKEY); if(!raw) return Array(10).fill(''); const arr=JSON.parse(raw); if(!Array.isArray(arr)||arr.length!==10) return Array(10).fill(''); return arr.map(x=>x||''); }catch(e){ return Array(10).fill(''); }
+}
+function saveNames(arr){ try{ localStorage.setItem(NKEY, JSON.stringify(arr)); }catch(e){} }
+let hamNames = loadNames();
+
+function labelFor(index){ // index: 0..9
+  const name = (hamNames[index]||'').trim();
+  if(name) return name;
+  return `登場ハム：#${String(index+1).padStart(2,'0')}`;
+}
+
+/* Name modal UI */
+const nameModal = document.getElementById('nameModal');
+const nameGrid = document.getElementById('nameGrid');
+function openNameModal(){
+  nameGrid.innerHTML='';
+  for(let i=0;i<10;i++){
+    const row=document.createElement('div'); row.className='row';
+    const lab=document.createElement('div'); lab.style.width='62px'; lab.textContent='#'+String(i+1).padStart(2,'0');
+    const inp=document.createElement('input'); inp.type='text'; inp.value=hamNames[i]||''; inp.placeholder=`例）こった`; inp.dataset.idx=i;
+    row.appendChild(lab); row.appendChild(inp); nameGrid.appendChild(row);
+  }
+  nameModal.classList.add('show');
+}
+function closeNameModal(){ nameModal.classList.remove('show'); }
+document.getElementById('nameBtn').addEventListener('click', openNameModal);
+document.getElementById('nameCancel').addEventListener('click', closeNameModal);
+document.getElementById('nameSave').addEventListener('click', ()=>{
+  const inputs=[...nameGrid.querySelectorAll('input')];
+  inputs.forEach(inp=>{ const i=parseInt(inp.dataset.idx); hamNames[i]=inp.value; });
+  saveNames(hamNames); closeNameModal();
+  // refresh current label if visible
+  const txt = el.hamLabel.dataset.index ? labelFor(parseInt(el.hamLabel.dataset.index)) : '';
+  if(txt) el.hamLabel.textContent = txt;
+});
+
+/* Celebration FX */
+function rays(){ const r=document.createElement('div'); r.className='rays run'; el.fx.appendChild(r); setTimeout(()=>r.remove(), 700); }
+const petalColors=['#ffd7e5','#ffe9a6','#d6fff0','#ffe6f2','#e1ffd7','#fff8cc'];
+function petals(count=60){
+  for(let i=0;i<count;i++){
+    const p=document.createElement('div'); p.className='petal';
+    const col = petalColors[Math.floor(Math.random()*petalColors.length)];
+    p.style.background=col;
+    p.style.left='50%'; p.style.top='0';
+    const sx = (Math.random()*120-60)+'vw'; // start x offset from center
+    const dx = (Math.random()*20-10)+'vw'; // drift per half fall
+    p.style.setProperty('--sx', sx); p.style.setProperty('--dx', dx);
+    p.style.animation=`petalFall ${0.9 + Math.random()*0.8}s ease-out ${Math.random()*0.2}s both`;
+    el.fx.appendChild(p);
+    setTimeout(()=>p.remove(), 1800);
+  }
+}
 
 /* UI */
 el.fsBtn.addEventListener('click', async ()=>{const docEl=document.documentElement;if(!document.fullscreenElement)await docEl.requestFullscreen().catch(()=>{});else await document.exitFullscreen().catch(()=>{})});

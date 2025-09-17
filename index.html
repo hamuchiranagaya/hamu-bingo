@@ -12,8 +12,8 @@ body{overflow:hidden}
 @media (orientation: portrait){#rotate-tip{display:flex}}@media (orientation: landscape){#rotate-tip{display:none}}
 #rotate-tip{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;text-align:center;padding:24px}
 
-#app{height:100vh;display:grid;grid-template-rows:48px 1fr 42px;gap:8px;padding:8px}
-header,footer{background:var(--panel);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
+#app{height:100vh;display:grid;grid-template-rows:48px 1fr;gap:8px;padding:8px}
+header{background:var(--panel);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
 header .title{font-size:clamp(14px,1.8vw,18px);font-weight:700}
 button{appearance:none;border:none;border-radius:10px;padding:8px 12px;color:#fff;background:#30365a;font-size:clamp(12px,1.7vw,16px)}
 .btn-accent{background:linear-gradient(180deg,#2f6bb0,#204b7b)}.btn-pink{background:linear-gradient(180deg,#b05590,#7b2e57)}.btn-gray{background:linear-gradient(180deg,#3a3f5b,#2a2f49)}
@@ -21,7 +21,8 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 
 .stage{position:relative;border-radius:14px;background:radial-gradient(120% 140% at 50% 0%,#252d5a 0%,#141a33 60%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);padding:8px;display:grid;place-items:center;overflow:hidden}
 .capsule-area{position:relative;width:100%;height:100%;display:grid;place-items:center}
-.spinner{width:var(--spinSize);height:var(--spinSize);max-width:520px;max-height:520px;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,.35));opacity:1;transition:opacity .4s ease}.start-big{width:min(82vh,82vw);height:min(82vh,82vw);max-width:none;max-height:none;}
+.spinner{width:var(--spinSize);height:var(--spinSize);max-width:520px;max-height:520px;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,.35));opacity:1;transition:opacity .4s ease}
+.start-big{width:min(88vh,88vw);height:min(88vh,88vw);max-width:none;max-height:none;}
 .spin{animation-name:spinTotal; animation-duration: var(--totalDur,2.4s); animation-timing-function: linear; animation-fill-mode: both;}
 .jitter{animation:jitterStrong .6s ease both; animation-iteration-count: 2;}
 .fadeout{opacity:0}
@@ -47,7 +48,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 .cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#10142b;color:var(--muted);font-weight:700;font-size:clamp(12px,1.8vw,18px)}
 .cell.hit{background:linear-gradient(180deg,#2a8cff,#1650a6);color:#fff;box-shadow:0 0 14px rgba(66,153,255,.35)}
 
-/* Ham */
+/* Ham popup */
 .hamster{position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:10px;background:rgba(0,0,0,.28);border-radius:16px;padding:12px;backdrop-filter:blur(2px);transform:translateY(14px);opacity:0}
 .hamster.show{animation:hamIn .4s ease .2s both}
 @keyframes hamIn{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -92,8 +93,8 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 <main>
 <section class="stage" id="stage">
   <div class="capsule-area">
-    <img id="spinner" class="spinner" src="assets/ketsu_01.png" alt="HamKetsu"/>
-    <div class="number-reveal"><div class="big-number visible" id="bigNumber">--</div></div>
+    <img id="spinner" class="spinner start-big" src="assets/start.png" alt="Start"/>
+    <div class="number-reveal"><div class="big-number" id="bigNumber"></div></div>
     <div class="hamster" id="hamBox">
       <div class="imgbox"><img id="hamImg" src="assets/ham_01.png" alt="Ham"/></div>
       <div class="label" id="hamLabel">登場ハム：#01</div>
@@ -113,8 +114,6 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
   <div id="historyGrid" class="grid"></div>
 </section>
 </main>
-
-<footer></footer>
 </div>
 
 <div class="settings" id="settings">
@@ -140,8 +139,7 @@ main{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;min-height:0}
 const TOTAL=75;
 const hamImages=Array.from({length:10},(_,i)=>`assets/ham_${String(i+1).padStart(2,'0')}.png`);
 const ketsuImages=Array.from({length:10},(_,i)=>`assets/ketsu_${String(i+1).padStart(2,'0')}.png`);
-const state={pool:[],history:[],lastHamIndex:-1,animBusy:false,sfx:true,spinSize:"min(64vh,64vw)",rotations:2,volume:0.8};
-function showStart(){ el.spinner.src='assets/start.png'; el.spinner.classList.add('start-big'); el.bigNumber.classList.remove('visible','metal','show-number'); el.bigNumber.textContent=''; el.hamBox.classList.remove('show'); }
+const state={pool:[],history:[],animBusy:false,sfx:true,spinSize:"min(64vh,64vw)",rotations:2,volume:0.8};
 const $=id=>document.getElementById(id);
 const el={grid:$("historyGrid"),draw:$("drawBtn"),undo:$("undoBtn"),reset:$("resetBtn"),
 bigNumber:$("bigNumber"),hamImg:$("hamImg"),hamLabel:$("hamLabel"),hamBox:$("hamBox"),
@@ -167,19 +165,22 @@ function startRollingSfx(){ if(!state.sfx) return; stopRollingSfx(); rollTimer=s
 function stopRollingSfx(){ if(rollTimer){ clearInterval(rollTimer); rollTimer=null; } }
 function playRevealSfx(){ const ctx=ensureAudio(); if(!ctx) return; const now=ctx.currentTime; const buffer=ctx.createBuffer(1,44100,44100); const data=buffer.getChannelData(0); for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5; const src=ctx.createBufferSource(); src.buffer=buffer; const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(600, now); const wg=ctx.createGain(); wg.gain.setValueAtTime(0.0001, now); wg.gain.exponentialRampToValueAtTime(0.25*state.volume, now+0.06); wg.gain.exponentialRampToValueAtTime(0.0001, now+0.35); bp.frequency.exponentialRampToValueAtTime(2000, now+0.32); src.connect(bp).connect(wg).connect(ctx.destination); src.start(now); src.stop(now+0.36); const freqs=[523.25,659.25,783.99]; freqs.forEach((f,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(f, now+0.02*i); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime((0.18 - i*0.03)*state.volume, now+0.05+0.02*i); g.gain.exponentialRampToValueAtTime(0.0001, now+0.6+0.05*i); o.connect(g).connect(ctx.destination); o.start(now+0.02*i); o.stop(now+0.7+0.05*i); }); }
 
+function showStart(){ el.spinner.src='assets/start.png'; el.spinner.classList.add('start-big'); el.bigNumber.classList.remove('visible','metal','show-number'); el.bigNumber.textContent=''; el.hamBox.classList.remove('show'); }
+
 /* Flow */
 async function drawOnce(){
   if(state.animBusy) return;
   if(state.pool.length===0){ alert('すべての番号が出ました！'); return; }
   state.animBusy = true;
-  // hide previous number & ham right away
+
+  // hide previous number & ham right away; exit start-big
   el.bigNumber.classList.remove('visible','metal','show-number');
   el.hamBox.classList.remove('show');
   el.spinner.classList.remove('start-big');
 
   const n = sample(state.pool); state.pool = state.pool.filter(x=>x!==n); state.history.push(n);
 
-  const kid = Math.floor(Math.random()*10); // 0..9
+  const kid = Math.floor(Math.random()*10);
   el.spinner.src = ketsuImages[kid];
   el.spinner.classList.remove('spin','jitter','fadeout');
   el.spinner.style.setProperty('--rotTurns', state.rotations.toString());
@@ -190,19 +191,19 @@ async function drawOnce(){
   el.spinner.classList.add('spin');
   await new Promise(r=>setTimeout(r, Math.round(state.rotations*1200)));
   el.spinner.classList.add('jitter');
-  await new Promise(r=>setTimeout(r, 600)); // stronger, longer shake
+  await new Promise(r=>setTimeout(r, 600));
   stopRollingSfx();
 
   el.spinner.classList.add('fadeout');
   flash(); shake(); burstShards(); burstSparkles(); playCrackSfx();
 
-  // Number persists until next draw
+  // Number persists
   el.bigNumber.classList.remove('show-number','metal'); el.bigNumber.classList.add('visible'); void el.bigNumber.offsetWidth;
   el.bigNumber.textContent = n; el.bigNumber.classList.add('show-number');
   setTimeout(()=>{ el.bigNumber.classList.add('metal'); }, 100);
 
-  // Show matching ham (ketsu_N -> ham_N)
-  const hidx = kid; el.hamImg.src = hamImages[hidx]; el.hamLabel.textContent = `登場ハム：#${String(hidx+1).padStart(2,'0')}`;
+  // Matched ham popup
+  el.hamImg.src = hamImages[kid]; el.hamLabel.textContent = `登場ハム：#${String(kid+1).padStart(2,'0')}`;
   el.hamBox.classList.remove('show'); void el.hamBox.offsetWidth; el.hamBox.classList.add('show');
 
   playRevealSfx();
@@ -211,11 +212,11 @@ async function drawOnce(){
   state.animBusy=false;
 }
 
-function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(last==null) return; state.pool.push(last); markGrid(last,false); el.bigNumber.classList.remove('metal'); if(state.history.length){el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible');} else {el.bigNumber.textContent='--'; el.bigNumber.classList.remove('visible');} save(); }
-function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); showStart(); save(); }
+function undo(){ if(state.animBusy) return; const last=state.history.pop(); if(last==null) return; state.pool.push(last); markGrid(last,false); el.bigNumber.classList.remove('metal'); if(state.history.length){el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible');} else {el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); showStart(); } save(); }
+function reset(){ if(state.animBusy) return; if(!confirm('すべてリセットしますか？')) return; initPool(); state.history=[]; buildGrid(); el.bigNumber.classList.remove('metal'); el.bigNumber.textContent=''; el.bigNumber.classList.remove('visible'); el.hamBox.classList.remove('show'); el.spinner.classList.remove('spin','jitter','fadeout'); showStart(); save(); }
 
 /* storage */
-const KEY='ham_bingo_state_v6_8';
+const KEY='ham_bingo_state_v6_11';
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify({pool:state.pool,history:state.history,sfx:state.sfx,spinSize:state.spinSize,rotations:state.rotations,volume:state.volume})); }catch(e){} }
 function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; const d=JSON.parse(raw); if(!Array.isArray(d.pool)||!Array.isArray(d.history)) return false; state.pool=d.pool; state.history=d.history; state.sfx=d.sfx ?? true; state.spinSize=d.spinSize ?? state.spinSize; state.rotations=d.rotations ?? 2; state.volume=d.volume ?? 0.8; return true; }catch(e){ return false; } }
 
@@ -232,7 +233,7 @@ el.undo.addEventListener('click', undo);
 el.reset.addEventListener('click', reset);
 
 /* init */
-function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations;}
+function init(){ buildGrid(); if(!load()) initPool(); state.history.forEach(n=>markGrid(n,true)); if(state.history.length){ el.bigNumber.textContent=state.history[state.history.length-1]; el.bigNumber.classList.add('visible'); el.spinner.classList.remove('start-big'); el.spinner.src='assets/ketsu_01.png'; } else { showStart(); } el.sfxState.textContent=state.sfx ? 'ON' : 'OFF'; document.documentElement.style.setProperty('--spinSize', state.spinSize); el.rotVal.textContent = state.rotations;}
 init();
 })();
 </script>
